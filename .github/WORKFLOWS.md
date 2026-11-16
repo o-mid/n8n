@@ -187,6 +187,11 @@ These only run if specific files changed:
 | `packages/@n8n/instance-ai/src/**`, `packages/@n8n/instance-ai/skills/**`, `packages/@n8n/instance-ai/knowledge-base/**`, `packages/@n8n/instance-ai/evaluations/**`, `packages/cli/src/modules/instance-ai/**`, `packages/core/src/execution-engine/eval-mock-helpers.ts`, `packages/@n8n/agents/src/**` | `ci-instance-ai-evals.yml` | on PR `opened` / `reopened` / `ready_for_review` |
 | `docker/get-n8n.sh`, `docker/get-n8n-compose.yml`, `docker/test-get-n8n.sh` | `test-get-n8n.yml`          | any        |
 
+To recover a failed `build-node-pc-image.yml` run, select **Re-run all jobs**.
+Its staging tags are specific to each run and attempt. **Re-run failed jobs**
+leaves successful builds in an earlier attempt, so the manifest job cannot use
+their source images. See [Docker image recovery](../docker/AGENTS.md#images-that-n8n-publishes-take-two-prs).
+
 ### On PR Review
 
 | Event                      | Workflow                    | Condition                                            |

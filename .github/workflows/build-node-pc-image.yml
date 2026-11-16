@@ -33,6 +33,7 @@ on:
 
 env:
   # Rebuilds at the same commit must not reuse a previous run or attempt.
+  # Recovery requires "Re-run all jobs" so every build uses the new attempt.
   STAGING_TAG: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
 
 jobs:
@@ -223,7 +224,11 @@ jobs:
           for REPO in "${REPOS[@]}"; do
             for DEV in "" "-dev"; do
               for ARCH in amd64 arm64; do
-                docker buildx imagetools inspect "$REPO:$NODE_VERSION-$STAGING_TAG$DEV-$ARCH" > /dev/null
+                SOURCE="$REPO:$NODE_VERSION-$STAGING_TAG$DEV-$ARCH"
+                if ! docker buildx imagetools inspect "$SOURCE" > /dev/null; then
+                  echo "::error::Source image $SOURCE is unavailable. Select 'Re-run all jobs' to rebuild all images in the same attempt. See docker/AGENTS.md." >&2
+                  exit 1
+                fi
               done
             done
           done

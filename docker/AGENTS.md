@@ -64,6 +64,13 @@ Do not copy the new `1.x` runtime pin into this input.
   failed, when only the workflow changed, or to get patched OS packages. Then
   pin the new digest.
 
+For `build-node-pc-image.yml`, select **Re-run all jobs** to recover a failed
+build or manifest job. Each attempt uses separate staging tags. **Re-run failed
+jobs** does not rebuild successful jobs, so their source images are unavailable
+to the new attempt. The manifest job stops before it moves any tags if a source
+image is unavailable. A full rerun recompiles Node for every selected variant
+and architecture. You can also start a new dispatch on master with `push` enabled.
+
 The `node-patched-26` target uses the same Node version and runtime base as
 `node-pc`, with pointer compression off. The workflow publishes runtime and
 `-dev` tags for Node 24 and Node 26. It builds each variant on native amd64
