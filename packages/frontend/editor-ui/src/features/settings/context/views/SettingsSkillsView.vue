@@ -456,7 +456,11 @@ const createMenuItems = computed<Array<ActionDropdownItem<CreateAction>>>(() => 
 ]);
 
 const showRecommendedEmptyState = computed(
-	() => showRecommendedSkills.value && scopeOptions.value.length > 0,
+	() =>
+		emptyState.value === 'noSkills' &&
+		skillsStore.collapsedSources.length === 0 &&
+		showRecommendedSkills.value &&
+		scopeOptions.value.length > 0,
 );
 
 const emptyStateCreateMenuItems = computed(() =>
@@ -996,7 +1000,37 @@ onMounted(async () => {
 			:show-docs-link="false"
 		/>
 
-		<div :class="$style.toolbar">
+		<div
+			v-if="showRecommendedEmptyState"
+			:class="$style.empty"
+			data-test-id="skills-recommended-empty-state"
+		>
+			<N8nHeading tag="h2" size="medium" bold>
+				{{ i18n.baseText('experiments.recommendedSkills.empty.title') }}
+			</N8nHeading>
+			<N8nText color="text-light">
+				{{ i18n.baseText('experiments.recommendedSkills.description') }}
+			</N8nText>
+			<RecommendedSkillCards
+				:class="$style.recommended"
+				entry-point="empty_state"
+				@select="onRecommendedSkillSelect('empty_state', $event)"
+			/>
+			<N8nActionDropdown
+				:items="emptyStateCreateMenuItems"
+				placement="bottom"
+				data-test-id="skills-empty-create-menu"
+				@select="onCreateMenuSelect"
+			>
+				<template #activator>
+					<N8nButton data-test-id="skills-empty-create-button">
+						{{ i18n.baseText('settings.context.skills.actions.createMenu') }}
+						<N8nIcon icon="chevron-down" size="small" />
+					</N8nButton>
+				</template>
+			</N8nActionDropdown>
+		</div>
+		<div v-if="!showRecommendedEmptyState" :class="$style.toolbar">
 			<N8nInput
 				v-model="search"
 				:class="$style.search"
@@ -1110,6 +1144,7 @@ onMounted(async () => {
 		</div>
 
 		<SkillsTable
+			v-if="!showRecommendedEmptyState"
 			v-model:table-options="tableOptions"
 			:skills="skillsStore.skills"
 			:items-length="skillsStore.count"
@@ -1144,30 +1179,15 @@ onMounted(async () => {
 					</N8nText>
 				</div>
 				<div v-else :class="$style.empty" data-test-id="skills-empty-state">
-					<template v-if="showRecommendedEmptyState">
-						<N8nHeading tag="h2" size="medium" bold>
-							{{ i18n.baseText('experiments.recommendedSkills.empty.title') }}
-						</N8nHeading>
-						<N8nText color="text-light">
-							{{ i18n.baseText('experiments.recommendedSkills.description') }}
-						</N8nText>
-						<RecommendedSkillCards
-							:class="$style.recommended"
-							entry-point="empty_state"
-							@select="onRecommendedSkillSelect('empty_state', $event)"
-						/>
-					</template>
-					<template v-else>
-						<N8nHeading tag="h2" size="medium" bold>
-							{{ i18n.baseText('settings.context.skills.empty.title') }}
-						</N8nHeading>
-						<N8nText color="text-light">
-							{{ i18n.baseText('settings.context.skills.empty.description') }}
-						</N8nText>
-					</template>
+					<N8nHeading tag="h2" size="medium" bold>
+						{{ i18n.baseText('settings.context.skills.empty.title') }}
+					</N8nHeading>
+					<N8nText color="text-light">
+						{{ i18n.baseText('settings.context.skills.empty.description') }}
+					</N8nText>
 					<N8nActionDropdown
 						v-if="scopeOptions.length > 0"
-						:items="emptyStateCreateMenuItems"
+						:items="createMenuItems"
 						placement="bottom"
 						data-test-id="skills-empty-create-menu"
 						@select="onCreateMenuSelect"
