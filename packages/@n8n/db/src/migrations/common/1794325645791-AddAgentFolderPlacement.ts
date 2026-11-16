@@ -17,7 +17,7 @@ export class AddAgentFolderPlacement1794325645791 implements ReversibleMigration
 					.varchar(16)
 					.notNull.default("'workflow'")
 					.withEnumCheck(['workflow', 'agent'])
-					.comment('Resource tree: workflow or agent'),
+					.comment('Resource tree: workflows or agents'),
 			],
 			{ recreatesOnSqlite: true },
 		);

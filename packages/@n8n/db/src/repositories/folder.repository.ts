@@ -97,6 +97,7 @@ export class FolderRepository extends Repository<Folder> {
 			.innerJoin('folder_path', 'path', 'folder.id = path.id')
 			.setParameters(baseQuery.getParameters())
 			.getMany();
+
 		const byId = new Map(folders.map((folder) => [folder.id, folder]));
 		const path: Folder[] = [];
 		const visited = new Set<string>();
