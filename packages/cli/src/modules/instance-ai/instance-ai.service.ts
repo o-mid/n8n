@@ -4,7 +4,9 @@ import {
 	mcpConnectRequestSchema,
 	credentialSetupHintSchema,
 	instanceAiBuildModeSchema,
+	instanceAiConfirmationSeveritySchema,
 	TEMPLATED_CUSTOM_AUTH_CREDENTIAL_TYPE,
+	type InstanceAiApprovalMode,
 	type InstanceAiAttachment,
 	type InstanceAiBuildMode,
 	type InstanceAiHandoffContext,
@@ -2955,7 +2957,12 @@ export class InstanceAiService {
 				if (signal.aborted && !this.shouldPreserveHitlOnShutdown(runId)) return;
 
 				if (result.confirmationEvent) {
-					this.trackConfirmationRequest(user.id, threadId, result.confirmationEvent);
+					this.trackConfirmationRequest(
+						user.id,
+						threadId,
+						result.confirmationEvent,
+						context.approvalMode,
+					);
 					this.eventBus.publish(threadId, result.confirmationEvent);
 				}
 
@@ -4036,7 +4043,12 @@ export class InstanceAiService {
 				if (opts.signal.aborted && !this.shouldPreserveHitlOnShutdown(opts.runId)) return;
 
 				if (result.confirmationEvent) {
-					this.trackConfirmationRequest(opts.user.id, opts.threadId, result.confirmationEvent);
+					this.trackConfirmationRequest(
+						opts.user.id,
+						opts.threadId,
+						result.confirmationEvent,
+						opts.orchestrationContext?.domainContext?.approvalMode,
+					);
 					this.eventBus.publish(opts.threadId, result.confirmationEvent);
 				}
 
@@ -4605,6 +4617,7 @@ export class InstanceAiService {
 		userId: string,
 		threadId: string,
 		confirmationEvent: { payload: Record<string, unknown> },
+		approvalMode: InstanceAiApprovalMode | undefined,
 	): void {
 		const payload = confirmationEvent.payload;
 		const inputThreadId = nanoid();
@@ -4652,13 +4665,18 @@ export class InstanceAiService {
 				(request.setupHint !== null && request.setupHint !== undefined),
 		);
 
-		this.telemetry.track('Builder asked for input', {
+		const severity = instanceAiConfirmationSeveritySchema.safeParse(payload.severity).data;
+		this.telemetry.track(TELEMETRY_EVENT.INSTANCE_AI.BUILDER_ASKED_FOR_INPUT, {
 			user_id: userId,
 			thread_id: threadId,
 			input_thread_id: inputThreadId,
 			type,
 			num_steps: numSteps,
 			contains_templated_cred: containsTemplatedCred,
+			...(typeof payload.toolCallId === 'string' ? { tool_call_id: payload.toolCallId } : {}),
+			...(typeof payload.toolName === 'string' ? { tool_name: payload.toolName } : {}),
+			...(severity ? { severity } : {}),
+			approval_mode: approvalMode ?? 'unavailable',
 		});
 
 		// Recipe content at spec time — production visibility into template and

@@ -9,6 +9,7 @@ import {
 	isSafeObjectKey,
 	resolveBuilderToolName,
 	WORKFLOW_BUILDER_TOOL_NAMES,
+	type InstanceAiApprovalMode,
 	type InstanceAiConfirmation,
 	type InstanceAiConfirmRequest,
 	type InstanceAiConfirmResponse,
@@ -1582,6 +1583,13 @@ export function createThreadRuntime(
 		return actionSource;
 	}
 
+	/** The approval mode that the backend uses for the run of a message sent now. */
+	function messageApprovalMode(): InstanceAiApprovalMode | 'unavailable' {
+		if (!instanceAiSettingsStore.approvalModesAvailable) return 'unavailable';
+		if (threadTargetsAgent(hooks.getThreadMetadata?.(threadId))) return 'manual';
+		return instanceAiSettingsStore.approvalMode;
+	}
+
 	function trackUserMessageSent(
 		isFirstMessage: boolean,
 		authorship: InstanceAiMessageAuthorship,
@@ -1606,6 +1614,7 @@ export function createThreadRuntime(
 			prefill_type: isPrefill ? authorship.prefillType : null,
 			prefill_id: isPrefill ? (authorship.prefillId ?? null) : null,
 			prompt_modified: isPrefill ? (authorship.promptModified ?? false) : null,
+			approval_mode: messageApprovalMode(),
 			mention_counts: mentionCounts,
 			attachment_count: attachmentCount,
 			selected_element_count: selectedElementCount,
